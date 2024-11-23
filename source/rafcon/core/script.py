@@ -16,12 +16,11 @@
 
 """
 
-from future.utils import string_types
-from builtins import str
 import os
-import imp
+import importlib
+import _imp
 import yaml
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.observer.observable import Observable
 
 from rafcon.core.config import global_config
 from rafcon.core.id_generator import generate_script_id
@@ -51,8 +50,6 @@ class Script(Observable, yaml.YAMLObject):
 
     """
 
-    yaml_tag = u'!Script'
-
     _script = None
 
     def __init__(self, path=None, filename=None, parent=None):
@@ -76,7 +73,7 @@ class Script(Observable, yaml.YAMLObject):
 
     @script.setter
     def script(self, script_text):
-        if not isinstance(script_text, string_types):
+        if not isinstance(script_text, str):
             raise ValueError("The script text needs to be a string")
         self._script = script_text
 
@@ -130,12 +127,13 @@ class Script(Observable, yaml.YAMLObject):
         :raises exceptions.IOError: if the compilation of the script module failed
         """
         try:
-            imp.acquire_lock()
+            _imp.acquire_lock()
 
             code = compile(self.script, '%s (%s)' % (self.filename, self._script_id), 'exec')
             # load module
             module_name = os.path.splitext(self.filename)[0] + str(self._script_id)
-            tmp_module = imp.new_module(module_name)
+            module_spec = importlib.machinery.ModuleSpec(module_name, None)
+            tmp_module = importlib.util.module_from_spec(module_spec)
             exec(code, tmp_module.__dict__)
             # return the module
             self.compiled_module = tmp_module
@@ -143,19 +141,7 @@ class Script(Observable, yaml.YAMLObject):
             self.compiled_module = None
             raise
         finally:
-            imp.release_lock()
-
-    @classmethod
-    def to_yaml(cls, dumper, data):
-        #TODO:implement
-        dict_representation = {}
-        node = dumper.represent_mapping(u'!Script', dict_representation)
-        return node
-
-    @classmethod
-    def from_yaml(cls, loader, node):
-        #TODO:implement
-        return None
+            _imp.release_lock()
 
     @property
     def parent(self):
@@ -181,7 +167,7 @@ class Script(Observable, yaml.YAMLObject):
 
     @filename.setter
     def filename(self, value):
-        if value is not None and not isinstance(value, string_types):
+        if value is not None and not isinstance(value, str):
             raise TypeError("The filename of a script has to be a string or None to use the default value.")
         self._filename = value
 
@@ -194,7 +180,7 @@ class Script(Observable, yaml.YAMLObject):
 
     @path.setter
     def path(self, value):
-        if not isinstance(value, string_types):
+        if not isinstance(value, str):
             raise TypeError("The path of a script has to be a string or None to use the default value.")
         self._path = value
         self._load_script()

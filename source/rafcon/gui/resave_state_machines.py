@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 # Copyright (C) 2016-2018 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
@@ -10,10 +11,6 @@
 # Rico Belder <rico.belder@dlr.de>
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
-#!/usr/bin/python
-
-from future import standard_library
-standard_library.install_aliases()
 import os
 from os.path import join, expanduser
 import threading
@@ -116,7 +113,7 @@ def convert(config_path, source_path, target_path=None, gui_config_path=None):
     main_window_controller = MainWindowController(sm_manager_model, main_window_view)
 
     if not os.getenv("RAFCON_START_MINIMIZED", False):
-        main_window = main_window_view.get_top_widget()
+        main_window = main_window_view.get_parent_widget()
         size = global_runtime_config.get_config_value("WINDOW_SIZE", None)
         position = global_runtime_config.get_config_value("WINDOW_POS", None)
         if size:

@@ -21,7 +21,7 @@ from pkg_resources import resource_filename
 def setup_l10n(logger=None):
     """Setup RAFCON for localization
 
-    Specify the directory, where the translation files (*.mo) can be found (rafcon/locale/) and set localization domain
+    Specify the directory, where the translation files ({*}.mo) can be found (rafcon/locale/) and set localization domain
     ("rafcon").
 
     :param logger: which logger to use for printing (either logging.log or distutils.log)
@@ -42,7 +42,6 @@ def setup_l10n(logger=None):
 
 
 def create_mo_files(logger):
-    assert "setup.py" in os.listdir(os.curdir)
     import subprocess
     domain = "rafcon"
     rel_localedir = join('source', 'rafcon', 'locale')

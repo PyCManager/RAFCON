@@ -61,7 +61,7 @@ def open_folder(query, default_path=None):
     # Allows confirming with Enter and double-click
     dialog.set_default_response(Gtk.ResponseType.OK)
     if main_window_controller:
-        dialog.set_transient_for(main_window_controller.view.get_top_widget())
+        dialog.set_transient_for(main_window_controller.view.get_parent_widget())
     dialog.set_current_folder(last_path)
     if selected_filename is not None:
         dialog.select_filename(selected_filename)
@@ -93,7 +93,7 @@ def open_folder(query, default_path=None):
 core_interface.open_folder_func = open_folder
 
 
-def create_folder(query, default_name=None, default_path=None):
+def create_folder(query, default_name=None, default_path=None, current_folder=None):
     """Shows a user dialog for folder creation
     
     A dialog is opened with the prompt `query`. The current path is set to the last path that was opened/created. The 
@@ -101,7 +101,8 @@ def create_folder(query, default_name=None, default_path=None):
     
     :param str query: Prompt asking the user for a specific folder
     :param str default_name: Default name of the folder to be created 
-    :param str default_path: Path in which the folder is created if the user doesn't specify a path 
+    :param str default_path: Path in which the folder is created if the user doesn't specify a path
+    :param str current_folder: Current folder that the FileChooserDialog points to in the beginning
     :return: Path created by the user or `default_path`/`default_name` if no path was specified or None if none of the
       paths is valid
     :rtype: str
@@ -128,8 +129,10 @@ def create_folder(query, default_name=None, default_path=None):
     # Allows confirming with Enter and double-click
     dialog.set_default_response(Gtk.ResponseType.OK)
     if main_window_controller:
-        dialog.set_transient_for(main_window_controller.view.get_top_widget())
+        dialog.set_transient_for(main_window_controller.view.get_parent_widget())
     dialog.set_current_folder(last_path)
+    if current_folder:
+        dialog.set_current_folder(current_folder)
     if default_name:
         dialog.set_current_name(default_name)
     dialog.set_show_hidden(False)
@@ -137,17 +140,50 @@ def create_folder(query, default_name=None, default_path=None):
     # Add library roots to list of shortcut folders
     add_library_root_path_to_shortcut_folders_of_dialog(dialog)
 
-    response = dialog.run()
+    # Run until the desired folder is found (warn if files are deleted)
+    confirmed = 0
+    while not confirmed:
+        response = dialog.run()
 
-    if response != Gtk.ResponseType.OK:
-        dialog.destroy()
-        if default_path and default_name:
-            default = os.path.join(default_path, default_name)
-            if os.path.isdir(default):
-                return default
-        return None
+        # Exit without saving
+        if response != Gtk.ResponseType.OK:
+            dialog.destroy()
+            if default_path and default_name:
+                default = os.path.join(default_path, default_name)
+                if os.path.isdir(default):
+                    return default
+            return None
 
-    path = dialog.get_filename()
+        path = dialog.get_filename()
+
+        # Give a warning if the path already contains files
+        files_in_path = os.listdir(path)
+        if files_in_path:
+            path_list = path.split('/')
+            popup = Gtk.Dialog(title='Path confirmation', transient_for=dialog, flags=0)
+            popup.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT, Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT)
+            text = 'Do you want to choose "{}" as a root folder?\n'\
+                   'The {} file(s)/folder(s) inside will be deleted!'\
+                   .format(path_list[-1], len(files_in_path))
+            label = Gtk.Label(label=text)
+            label.set_margin_start(20)
+            label.set_margin_end(20)
+            label.set_margin_top(15)
+            label.set_margin_bottom(15)
+            popup.vbox.pack_start(label, True, True, 0)
+            label.show()
+            popup.set_transient_for(dialog)
+            response = popup.run()
+            popup.destroy()
+
+            if not response == Gtk.ResponseType.ACCEPT:
+                path = '/'.join(path_list[:-1])
+                dialog.set_current_folder(path)
+            else:
+                confirmed = 1
+        else:
+            confirmed = 1
+
     dialog.destroy()
 
     if os.path.isdir(path):
@@ -195,7 +231,7 @@ def save_folder(query, default_name=None):
     # Allows confirming with Enter and double-click
     dialog.set_default_response(Gtk.ResponseType.OK)
     if main_window_controller:
-        dialog.set_transient_for(main_window_controller.view.get_top_widget())
+        dialog.set_transient_for(main_window_controller.view.get_parent_widget())
     dialog.set_current_folder(last_path)
     if default_name:
         dialog.set_current_name(default_name)
@@ -219,23 +255,27 @@ def save_folder(query, default_name=None):
     return path
 
 
-# overwrite the save_folder_func of the interface: thus the user input is now retrieved from a dialog box and not
-# from raw input any more
-core_interface.save_folder_func = save_folder
+def show_notice(query, custom_buttons=None):
+    """Shows a message dialog
 
-
-def show_notice(query):
+    :param str query: The message text
+    :param list(tuple(str, int)) custom_buttons: The custom buttons
+    """
     from gi.repository import Gtk
     from rafcon.gui.helpers.label import set_button_children_size_request
     from rafcon.gui.singleton import main_window_controller
     from xml.sax.saxutils import escape
     dialog = Gtk.MessageDialog(flags=Gtk.DialogFlags.MODAL, type=Gtk.MessageType.INFO, buttons=Gtk.ButtonsType.OK)
+    if custom_buttons is not None:
+        for text, id in custom_buttons:
+            dialog.add_button(text, id)
     if main_window_controller:
-        dialog.set_transient_for(main_window_controller.view.get_top_widget())
+        dialog.set_transient_for(main_window_controller.view.get_parent_widget())
     dialog.set_markup(escape(query))
     set_button_children_size_request(dialog)
-    dialog.run()
+    response = dialog.run()
     dialog.destroy()
+    return response
 
 
 # overwrite the show_notice_func of the interface: thus the user input is now retrieved from a dialog box and not

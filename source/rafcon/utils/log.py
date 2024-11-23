@@ -17,9 +17,7 @@
    :synopsis: A module caring about the logging capability of RAFCON
 
 """
-from __future__ import print_function
 
-from builtins import object
 import os
 import logging
 import logging.config
@@ -51,7 +49,7 @@ def add_logging_level(level_name, level_num, method_name=None):
     :param str level_name: the level name
     :param int level_num: the level number/value
     :raises AttributeError: if the level
-    name is already an attribute of the `logging` module or if the method name is already present
+        name is already an attribute of the `logging` module or if the method name is already present
 
     Example
     -------

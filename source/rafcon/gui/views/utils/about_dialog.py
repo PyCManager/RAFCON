@@ -1,5 +1,3 @@
-# coding=utf-8
-
 # Copyright (C) 2015-2017 DLR
 #
 # All rights reserved. This program and the accompanying materials are made
@@ -14,8 +12,9 @@
 # Sebastian Brunner <sebastian.brunner@dlr.de>
 
 from gi.repository import Gtk
-from gi.repository import GObject
+from gi.repository import GdkPixbuf
 import rafcon
+from rafcon.gui.design_config import global_design_config
 
 
 class AboutDialogView(Gtk.AboutDialog):
@@ -26,7 +25,8 @@ class AboutDialogView(Gtk.AboutDialog):
         self.set_version(rafcon.__version__)
         self.set_authors(("Rico Belder", "Sebastian Brunner", "Franz Steinmetz", "Michael Vilzmann", "Lukas Becker",
                           "Annika Wollschläger", "Benno Voggenreiter", "Matthias Büttner", "Mahmoud Akl"))
-        # TODO: set copyright/license
-        # self.set_copyright("Copyright: DLR")
-        # self.set_license("Copyright: DLR")
+        self.set_copyright("DLR")
+        self.set_license("Eclipse Public License 1.0")
+        splash_screen_path = global_design_config.get_config_value("LOGO_FOLDER")+'/RAFCON_Logo_Farbe_RGB_negativ_small.png'
+        self.set_logo(GdkPixbuf.Pixbuf.new_from_file(splash_screen_path))
         self.set_website("https://github.com/DLR-RM/RAFCON")

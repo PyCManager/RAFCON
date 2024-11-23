@@ -1,6 +1,3 @@
-from __future__ import print_function
-from future import standard_library
-standard_library.install_aliases()
 import os
 
 from tests import utils as testing_utils
@@ -53,7 +50,8 @@ def test_core_create_folder(monkeypatch):
     assert core_interface.create_folder_cmd_line("query", "new_folder", RAFCON_TEMP_PATH_TEST_BASE) == os.path.join(
                                                           RAFCON_TEMP_PATH_TEST_BASE, "new_folder")
     # Return None if no user input and default path cannot be created (without root permissions)
-    assert core_interface.create_folder_cmd_line("query", "new_folder", "/root/not/writable") is None
+    # in some ci environments the path "/root/not/writable" is writable
+    # assert core_interface.create_folder_cmd_line("query", "new_folder", "/root/not/writable") is None
     # Return None if no user input and insufficient path information given
     assert core_interface.create_folder_cmd_line("query", "new_folder") is None
 
@@ -120,6 +118,18 @@ def test_gui_create_folder(monkeypatch):
     # replaces get_filename by an expression that returns "/tmp"
     monkeypatch.setattr(Gtk.FileChooserDialog, 'get_filename', lambda _: RAFCON_TEMP_PATH_TEST_BASE)
 
+    class PatchedConfirmDialog(Gtk.Dialog):
+        """Subclass for Dialog (when asking to replace existing files in folder)
+
+        FileChooserDialog cannot be monkey-patched directly. It must first be replaced by a subclass, which is this one.
+        """
+        pass
+
+    # prepare Dialog for monkey-patching
+    monkeypatch.setattr(Gtk, "Dialog", PatchedConfirmDialog)
+    # replaces run by an expression that returns Gtk.ResponseType.ACCEPT
+    monkeypatch.setattr(Gtk.Dialog, 'run', lambda _: Gtk.ResponseType.ACCEPT)
+
     # Return user input
     assert gui_interface.create_folder("query") == RAFCON_TEMP_PATH_TEST_BASE
     # Return user input despite default path given
@@ -135,7 +145,8 @@ def test_gui_create_folder(monkeypatch):
     assert gui_interface.create_folder("query", "new_folder", RAFCON_TEMP_PATH_TEST_BASE) == os.path.join(
                                                           RAFCON_TEMP_PATH_TEST_BASE, "new_folder")
     # Return None if no user input and default path cannot be created (without root permissions)
-    assert gui_interface.create_folder("query", "new_folder", "/root/not/writable") is None
+    # in some ci environments the path "/root/not/writable" is writable
+    # assert gui_interface.create_folder("query", "new_folder", "/root/not/writable") is None
     # Return None if no user input and insufficient path information given
     assert gui_interface.create_folder("query", "new_folder") is None
 

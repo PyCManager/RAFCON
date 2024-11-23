@@ -14,8 +14,7 @@ Core Configuration
 
 .. _core_config_example:
 
-Example
-"""""""
+Example:
 
 A typical config file looks like this:
 
@@ -32,11 +31,14 @@ A typical config file looks like this:
     }
     LIBRARY_RECOVERY_MODE: False
 
+    LOAD_SM_WITH_CHECKS: True
+
     STORAGE_PATH_WITH_STATE_NAME: True
     MAX_LENGTH_FOR_STATE_NAME_IN_STORAGE_PATH: None
     NO_PROGRAMMATIC_CHANGE_OF_LIBRARY_STATES_PERFORMED: False
 
-    EXECUTION_LOG_ENABLE: False
+    IN_MEMORY_EXECUTION_HISTORY_ENABLE: True
+    FILE_SYSTEM_EXECUTION_HISTORY_ENABLE: True
     EXECUTION_LOG_PATH: "%RAFCON_TEMP_PATH_BASE/execution_logs"
     EXECUTION_LOG_SET_READ_AND_WRITABLE_FOR_ALL: False
 
@@ -44,8 +46,7 @@ A typical config file looks like this:
 
 .. _core_config_docs:
 
-Documentation
-"""""""""""""
+Documentation:
 
 In the following, all possible parameters are described, together with
 their default value:
@@ -70,8 +71,17 @@ LIBRARY\_PATHS
 LIBRARY\_RECOVERY\_MODE
   | Type: boolean
   | Default: ``False``
-  | If this flag is activated, state machine with consistency erros concerning their data ports can be loaded.
-    Erros are just printed out as warnings. This can be used to fix erroneous state machines.
+  | If this flag is activated, state machine with consistency errors concerning their data ports can be loaded.
+    Instead of raising exceptions only errors are printed. Invalid transitions and data-flows will just be removed.
+    This mode can be used to fix erroneous state machines.
+    Intermediate and expert users can also keep this setting enabled all the time.
+
+LOAD\_SM\_WITH\_CHECKS
+  | Type: boolean
+  | Default: ``True``
+  | If this flag is activated, every state is checked for consistency before loaded.
+    If set to false all consistency checks will be skipped. This leads to much faster loading times.
+    However, if there are consistency errors RAFCON tries to open the state machines and will fail.
 
 STORAGE\_PATH\_WITH\_STATE\_NAME
   | Type: boolean
@@ -90,8 +100,14 @@ NO\_PROGRAMMATIC\_CHANGE\_OF\_LIBRARY\_STATES\_PERFORMED
   | Type: boolean
   | Default: ``False``
   | Set this to True if you can make sure that the interface of library states is not programmatically changed anywhere inside your state machines. This will speed up loading of libraries.
+    If you use template state machines that insert states during runtime, this must be disabled.
 
-EXECUTION\_LOG\_ENABLE
+IN\_MEMORY\_EXECUTION\_HISTORY\_ENABLE
+  | Type: boolean
+  | Default: ``True``
+  | Enables execution history. The execution history is required for backward execution and execution logging to the file system.
+
+FILE\_SYSTEM\_EXECUTION\_HISTORY\_ENABLE
   | Type: boolean
   | Default: ``True``
   | Enables the logging of rafcon execution histories to the file system. Every time a statemachine is executed, a python shelve is created in the execution log directory, e.g. ``/tmp/rafcon_execution_logs/rafcon_execution_log_99-Bottles-of-Beer_2017-08-31-16-07-17.shelve``. Some helpful utility functions for working with log files through python are in: ``import rafcon.utils.execution_log``. A tiny tiny code snippet which shows how to use the pandas.DataFrame representation to query the outcomes of a state named ‘CheckFinished’ is here: ``https://rmc-github.robotic.dlr.de/common/rafcon/pull/324#issuecomment-2520``
@@ -113,16 +129,11 @@ SCRIPT\_RECOMPILATION\_ON\_STATE\_EXECUTION:
     resetting all global variables. For reasons of backwards compatibility, the default value is ``True``. It is
     recommended to set the value to ``False``, causing a recompilation only when the execution of a state machine is
     newly started, which is a bit faster and allows to share data between consecutive state executions.
-
-
   
 GUI Configuration
 -----------------
 
 .. _gui_config_example:
-
-Example
-"""""""
 
 A typical config file looks like this:
 
@@ -281,8 +292,7 @@ A typical config file looks like this:
 
 .. _gui_config_docs:
 
-Documentation
-"""""""""""""
+Documentation:
 
 TYPE
   | Type: String-constant
@@ -297,7 +307,7 @@ SOURCE\_EDITOR\_STYLE
     download different styles
     `here <https://wiki.gnome.org/Projects/GtkSourceView/StyleSchemes>`__.
     The scripts have to be downloaded to
-    ~/.local/share/gtksourceview-2.0/styles. "rafcon" is a style
+    <rafcon package directory>/share/gtksourceview-2.0/styles. "rafcon" is a style
     created to fit to the design of RAFCON.
 
 GAPHAS\_EDITOR\_AUTO\_FOCUS\_OF\_ROOT\_STATE
@@ -600,8 +610,7 @@ package, please check the `official documentation <https://docs.python.org/2/lib
 
 .. _logging_config_example:
 
-Example
-"""""""
+Example:
 
 To not destroy the behavior of RAFCON, the default configuration should be used as basis for your extensions. The
 following example shows how to add another logging handler, writing all messages to a file:
@@ -609,18 +618,13 @@ following example shows how to add another logging handler, writing all messages
 .. code:: json
 
     {
-        ...
-
         "loggers": {
-            ...
             "rafcon": {
-                ...
                 "handlers": ["stdout", "stderr", "loggingView", "file"]
             }
         },
 
         "handlers": {
-            ...
             "file": {
                 "class": "logging.handlers.RotatingFileHandler",
                 "formatter": "default",
@@ -629,8 +633,6 @@ following example shows how to add another logging handler, writing all messages
                 "backupCount": 3
             }
         },
-
-        ...
     }
 
 
@@ -647,8 +649,7 @@ by launching the ``start.py`` script with argument "-nc".
 
 .. _monitoring_plugin_example:
 
-Example
-"""""""
+Example:
 
 The default ``network_config.file`` looks like:
 
@@ -670,8 +671,7 @@ The default ``network_config.file`` looks like:
 
 .. _monitoring_plugin_docs:
 
-Documentation
-"""""""""""""
+Documentation:
 
 TYPE
   | Type: string

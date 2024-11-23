@@ -17,7 +17,6 @@
 
 """
 
-from future.utils import string_types
 from rafcon.core.states.library_state import LibraryState
 from rafcon.gui.controllers.utils.extended_controller import ExtendedController
 from rafcon.gui.helpers.label import react_to_event
@@ -35,7 +34,7 @@ class EditorController(ExtendedController):
 
     def __init__(self, model, view, observed_method="script_text"):
         """Constructor"""
-        assert isinstance(observed_method, string_types)
+        assert isinstance(observed_method, str)
         self._observed_method = observed_method
         super(EditorController, self).__init__(model, view)
 
@@ -79,7 +78,7 @@ class EditorController(ExtendedController):
         if react_to_event(self.view, self.view.textview, event) and hasattr(buffer, 'can_undo') and buffer.can_undo():
             logger.debug('Run undo on {}'.format(self.__class__.__name__))
             return buffer.undo()
-        return False
+        return True
 
     def _redo(self, *event, **kwargs):
         if not self.view:
@@ -88,7 +87,7 @@ class EditorController(ExtendedController):
         if react_to_event(self.view, self.view.textview, event) and hasattr(buffer, 'can_redo') and buffer.can_redo():
             logger.debug('Run redo on {}'.format(self.__class__.__name__))
             return buffer.redo()
-        return False
+        return True
 
     def _apply(self, *event, **kwargs):
 

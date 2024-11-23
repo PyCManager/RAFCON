@@ -1,4 +1,3 @@
-from builtins import object
 import os
 import pytest
 from tests import utils as testing_utils
@@ -36,7 +35,7 @@ class TestErrorPreemptionHandling(object):
         cls.state_machine = None
         testing_utils.shutdown_environment_only_core()
 
-    def setup(self):
+    def setup_method(self):
         # This methods runs before each test method and resets the global variables
         gvm.set_variable("wait_inner_observer_1", 10)
         gvm.set_variable("wait_inner_observer_2", 10)
@@ -60,7 +59,7 @@ class TestErrorPreemptionHandling(object):
         gvm.set_variable("inner_observer_1_finish", False)
         gvm.set_variable("inner_observer_2_finish", False)
 
-    def teardown(self):
+    def teardown_method(self):
         # variables_for_pytest.test_multithrading_lock.release()
         pass
 

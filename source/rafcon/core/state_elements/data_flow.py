@@ -18,8 +18,7 @@
 """
 
 from weakref import ref
-from future.utils import string_types
-from gtkmvc3.observable import Observable
+from rafcon.design_patterns.observer.observable import Observable
 
 from rafcon.core.id_generator import generate_data_flow_id
 from rafcon.core.state_elements.state_element import StateElement
@@ -39,8 +38,6 @@ class DataFlow(StateElement):
     :ivar int DataFlow.data_flow_id: the id of the data port, must be unique for the parent state
     :ivar rafcon.core.states.container_state.ContainerState StateElement.parent: reference to the parent state
     """
-
-    yaml_tag = u'!DataFlow'
 
     _data_flow_id = None
     _from_state = None
@@ -84,17 +81,23 @@ class DataFlow(StateElement):
         default_string = "Data flow - from_state: %s, from_key: %s, to_state: %s, to_key: %s, id: %s" % \
                (self._from_state, self._from_key, self._to_state, self._to_key, self._data_flow_id)
         if self.parent:
-            from_port = None
-            if self.from_state == self.parent.state_id:
-                from_port = self.parent.get_data_port_by_id(self.from_key)
-            else:
-                from_port = self.parent.states[self.from_state].get_data_port_by_id(self.from_key)
+            try:
+                from_port = None
+                if self.from_state == self.parent.state_id:
+                    from_port = self.parent.get_data_port_by_id(self.from_key)
+                else:
+                    from_port = self.parent.states[self.from_state].get_data_port_by_id(self.from_key)
+            except:
+                pass
 
-            to_port = None
-            if self.to_state == self.parent.state_id:
-                to_port = self.parent.get_data_port_by_id(self.to_key)
-            else:
-                to_port = self.parent.states[self.to_state].get_data_port_by_id(self.to_key)
+            try:
+                to_port = None
+                if self.to_state == self.parent.state_id:
+                    to_port = self.parent.get_data_port_by_id(self.to_key)
+                else:
+                    to_port = self.parent.states[self.to_state].get_data_port_by_id(self.to_key)
+            except:
+                pass
 
             if from_port and to_port:
                 return "Data flow - from_state: %s, from_port_key: %s, from_port_name: %s, " \
@@ -150,7 +153,7 @@ class DataFlow(StateElement):
         :param int from_key: Data port id of the origin port
         :raises exceptions.ValueError: If parameters have wrong types or the new data flow is not valid
         """
-        if not isinstance(from_state, string_types):
+        if not isinstance(from_state, str):
             raise ValueError("Invalid data flow origin port: from_state must be a string")
         if not isinstance(from_key, int):
             raise ValueError("Invalid data flow origin port: from_key must be of type int")
@@ -174,9 +177,8 @@ class DataFlow(StateElement):
 
     @from_state.setter
     @lock_state_machine
-    # @Observable.observed  # should not be observed to stay consistent
     def from_state(self, from_state):
-        if not isinstance(from_state, string_types):
+        if not isinstance(from_state, str):
             raise ValueError("from_state must be a string")
 
         self._change_property_with_validity_check('_from_state', from_state)
@@ -205,7 +207,7 @@ class DataFlow(StateElement):
         :param int to_key: Data port id of the target port
         :raises exceptions.ValueError: If parameters have wrong types or the new data flow is not valid
         """
-        if not isinstance(to_state, string_types):
+        if not isinstance(to_state, str):
             raise ValueError("Invalid data flow target port: from_state must be a string")
         if not isinstance(to_key, int):
             raise ValueError("Invalid data flow target port: from_outcome must be of type int")
@@ -229,9 +231,8 @@ class DataFlow(StateElement):
 
     @to_state.setter
     @lock_state_machine
-    # @Observable.observed  # should not be observed to stay consistent
     def to_state(self, to_state):
-        if not isinstance(to_state, string_types):
+        if not isinstance(to_state, str):
             raise ValueError("to_state must be a string")
 
         self._change_property_with_validity_check('_to_state', to_state)

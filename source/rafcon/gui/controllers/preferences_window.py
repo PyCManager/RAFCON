@@ -20,8 +20,6 @@
 from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import GObject
-from future.utils import string_types
-from builtins import str
 import yaml_configuration.config
 from os.path import dirname
 
@@ -144,7 +142,7 @@ class PreferencesWindowController(ExtendedController):
         """
         self.check_for_preliminary_config()
 
-        method_name = info['method_name']  # __setitem__, __delitem__, clear, ...
+        method_name = info['method_name']
 
         if method_name in ['__setitem__', '__delitem__']:
             config_key = info['args'][0]
@@ -541,7 +539,7 @@ class PreferencesWindowController(ExtendedController):
         try:
             new_shortcuts = literal_eval(new_shortcuts)
             if not isinstance(new_shortcuts, list) and \
-               not all([isinstance(shortcut, string_types) for shortcut in new_shortcuts]):
+               not all([isinstance(shortcut, str) for shortcut in new_shortcuts]):
                 raise ValueError()
         except (ValueError, SyntaxError):
             logger.warning("Shortcuts must be a list of strings")
@@ -594,12 +592,13 @@ class PreferencesWindowController(ExtendedController):
         :param title_text: Title text
         :param description: Description
         """
-        dialog = Gtk.Dialog(title_text, self.view["preferences_window"],
-                            flags=0, buttons=
-                            (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
-                             Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
+        dialog = Gtk.Dialog(title=title_text, transient_for=self.view["preferences_window"], flags=0)
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT, Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT)
         label = Gtk.Label(label=description)
-        label.set_padding(xpad=10, ypad=10)
+        label.set_margin_start(10)
+        label.set_margin_end(10)
+        label.set_margin_top(10)
+        label.set_margin_bottom(10)
         dialog.vbox.pack_start(label, True, True, 0)
         label.show()
         self._gui_checkbox = Gtk.CheckButton(label="GUI Config")
